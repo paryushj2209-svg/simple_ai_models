@@ -7,17 +7,18 @@ class method:
     def __init__(self):
         pass
 
-    def step(self, x):
-        if x<=0:
-            return 0
-        else:
-            return 1
+    def step(self, X):
+        for x in X:
+            if x<=0:
+                return 0
+        return 1
         
-    def relu(self, x):
-        return max(0,x)
+    def relu(self, X):
+        for x in X:
+            return max(0,x)
     
-    def linear(self,x):
-        return x
+    def linear(self,X):
+        return X
     
 def train_test_split(data, test_size=0.2):
     np.random.seed(42)
@@ -25,7 +26,11 @@ def train_test_split(data, test_size=0.2):
     test_set_size = int(len(data) * test_size)
     test_indices = shuffled_indices[:test_set_size]
     train_indices = shuffled_indices[test_set_size:]
-    return data.iloc[train_indices], data.iloc[test_indices]
+    train_x = data.iloc[train_indices, :-1]
+    train_y = data.iloc[train_indices, -1]
+    test_x = data.iloc[test_indices, :-1]
+    test_y = data.iloc[test_indices, -1]
+    return train_x, train_y, test_x, test_y
 
 class linear_regression:
     def __init__(self,train_data, test_data):
