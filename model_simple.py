@@ -3,23 +3,6 @@ import numpy as np
 def inverse(matrix):
     return np.linalg.inv(matrix)
 
-class method:
-    def __init__(self):
-        pass
-
-    def step(self, X):
-        for x in X:
-            if x<=0:
-                return 0
-        return 1
-        
-    def relu(self, X):
-        for x in X:
-            return max(0,x)
-    
-    def linear(self,X):
-        return X
-    
 def train_test_split(data, test_size=0.2):
     np.random.seed(42)
     shuffled_indices = np.random.permutation(len(data))
@@ -32,12 +15,16 @@ def train_test_split(data, test_size=0.2):
     test_y = data.iloc[test_indices, -1]
     return train_x, train_y, test_x, test_y
 
+def handle_nan(data):
+    return data.fillna(data.mean())
+
 class linear_regression:
-    def __init__(self,train_data, test_data):
-        self.train_data = train_data
-        self.test_data = test_data
+    def __init__(self):
+        pass
 
     def train(self,x_train,y_train):
+        x_train = np.array(x_train)
+        y_train = np.array(y_train)
         sum_x = np.sum(x_train)
         sum_y = np.sum(y_train)
         sum_x_squared = np.sum(x_train**2)
@@ -48,6 +35,8 @@ class linear_regression:
         return m, c
     
     def test(self,m,c, x_test, y_test):
+        x_test = np.array(x_test)
+        y_test = np.array(y_test)
         y_pred = self.predict(x_test,m,c)
         mse = np.mean((y_test - y_pred)**2)
         rmse = np.sqrt(mse)
@@ -61,6 +50,30 @@ class linear_regression:
     def predict(self,x,m,c):
         return m*x + c
 
+class polynomial_regression:
+    def __init__(self, degree):
+        self.degree = degree
+
+    def train(self,x_train,y_train):
+        x_train = np.array(x_train)
+        y_train = np.array(y_train)
+        X_poly = np.vander(x_train, N=self.degree + 1, increasing=True)
+        coeffs = np.linalg.lstsq(X_poly, y_train, rcond=None)[0]
+        return coeffs
+    
+    def test(self,coeffs, x_test, y_test):
+        x_test = np.array(x_test)
+        y_test = np.array(y_test)
+        X_poly_test = np.vander(x_test, N=self.degree + 1, increasing=True)
+        y_pred = X_poly_test @ coeffs
+        mse = np.mean((y_test - y_pred)**2)
+        rmse = np.sqrt(mse)
+        r2 = 1 - (np.sum((y_test - y_pred)**2) / np.sum((y_test - np.mean(y_test))**2))
+        accuracy = np.mean((y_test - y_pred)**2 < 0.01)
+        print("Accuracy:", accuracy)
+        print("Mean Squared Error:", mse)
+        print("Root Mean Squared Error:", rmse)
+        print("R-squared:", r2)
 class logistic_regression:
     def __init__(self,train_data, test_data, threshold=0.5):
         self.train_data = train_data
@@ -68,11 +81,14 @@ class logistic_regression:
         self.threshold = threshold
 
     def pred(self,x_train,Z):
+        x_train = np.array(x_train)
         z = Z(x_train)
         y_pred = 1 / (1 + np.exp(-z))
         return y_pred
     
     def test(self,x_test, y_test):
+        y_test = np.array(y_test)
+        x_test = np.array(x_test)
         y_pred = self.pred(x_test, self.Z)
         y_pred_class = (y_pred >= self.threshold).astype(int)
         accuracy = np.mean(y_pred_class == y_test)
